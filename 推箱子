@@ -1,0 +1,164 @@
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+#include<ctype.h>
+#include<conio.h>
+
+
+// 推箱子游戏结构体：存储地图、位置信息
+typedef struct {
+    int map[11][11];    // 11x11地图：0=空地，1=玩家，2=箱子，3=目标，6=边界
+    int px, py;         // 玩家坐标
+    int boxx, boxy;     // 箱子坐标
+    int targetx, targety;// 目标坐标
+    int playerstate;    // 玩家状态（4=未接触箱子，可扩展）
+} Sokoban;
+
+// 初始化玩家位置（避免边界）
+void startplay(Sokoban *s) {
+    // 玩家位置限定在1-9（避开0和10的边界）
+    s->px = rand() % 9 + 1;
+    s->py = rand() % 9 + 1;
+    s->playerstate = 4;  // 初始状态：未接触箱子
+}
+
+// 初始化箱子位置（避免与玩家重叠）
+void startbox(Sokoban *s) {
+    do {
+        s->boxx = rand() % 7+ 2;
+        s->boxy = rand() % 7 + 2;
+    } while (s->boxx == s->px && s->boxy == s->py); // 箱子不与玩家重叠
+}
+
+// 初始化目标位置（避免与玩家/箱子重叠）
+void starttarget(Sokoban *s) {
+    do {
+        s->targetx = rand() % 9 + 1;
+        s->targety = rand() % 9 + 1;
+        // 目标不与玩家、箱子重叠
+    } while ((s->targetx == s->px && s->targety == s->py) || 
+             (s->targetx == s->boxx && s->targety == s->boxy));
+}
+
+// 初始化地图（绘制边界、填充空地）
+void initmap(Sokoban *s) {
+    for (int r = 0; r < 11; r++) {
+        for (int c = 0; c < 11; c++) {
+            // 边界（第一行/最后一行，第一列/最后一列）设为6
+            if (r == 0 || c == 0 || r == 10 || c == 10) {
+                s->map[r][c] = 6;
+            } else {
+                s->map[r][c] = 0; // 非边界设为空地
+            }
+        }
+    }
+    // 标记玩家、箱子、目标位置
+    s->map[s->px][s->py] = 1;
+    s->map[s->boxx][s->boxy] = 2;
+    s->map[s->targetx][s->targety] = 3;
+}
+
+// 处理玩家移动方向（W/A/S/D控制）
+void movedirection(Sokoban *s){
+    char input =toupper(getch());
+    int new_px,new_py;
+    new_px=s->px;
+    new_py=s->py;
+    switch(input){
+        case 'W': new_px--;
+        break;
+        case 'S':new_px++;
+        break;
+        case 'A':new_py--;
+        break;
+        case 'D':new_py++;
+        break;
+        case 'Q':
+        printf("退出游戏！\n");
+        exit(0);
+        default:
+        printf("无效输入,请输入W/S/A/D控制移动,Q退出。\n");
+    }
+    if(s->map[new_px][new_py]==6)return;
+    if(s->map[new_px][new_py]==2)
+    {
+        int new_boxx=s->boxx+(new_px-s->px);
+        int new_boxy=s->boxy+(new_py-s->py);
+    
+    if(s->map[new_boxx][new_boxy]==6){
+        return;
+
+    }
+    s->map[s->boxx][s->boxy]=0;
+    s->boxx=new_boxx;
+    s->boxy=new_boxy;
+    s->map[s->boxx][s->boxy]=2;
+}
+s->map[s->px][s->py]=0;
+    s->px=new_px;
+    s->py=new_py;
+    s->map[s->px][s->py]=1;
+}
+
+
+void win(Sokoban *s){
+    if(s->boxx==s->targetx&&s->boxy==s->targety){
+        printf("CONGRATULATIONS! YOU WIN!\n");
+        printf("IF YOU WANT REPLAY (Y/N)\n");
+        char input =toupper(getch());
+        if(input=='Y'){
+            exit(0);
+        }
+        else{
+             startplay(s);
+             startbox(s);
+             starttarget(s);
+             initmap(s);
+        }
+        }
+    
+    }
+
+
+// 打印地图（可视化）
+void printmap(Sokoban *s) {
+    system("cls"); // 清屏（Windows平台）
+    for (int r = 0; r < 11; r++) {
+        for (int c = 0; c < 11; c++) {
+            switch (s->map[r][c]) {
+                case 0: printf("0"); break;    // 空地
+                case 1: printf("1"); break;   // 玩家
+                case 2: printf("2"); break;   // 箱子
+                case 3: printf("3"); break;   // 目标
+                case 6: printf("?"); break;    // 边界
+                default: printf("  ");
+            }
+        }
+        printf("\n");
+    }
+    printf("操作说明：W(上) S(下) A(左) D(右) Q(退出)\n");
+}
+
+int main(void) {
+    // 关键：为结构体分配内存（避免野指针）
+    Sokoban game;  // 定义结构体变量（而非指针），直接使用
+    Sokoban *s = &game; // 指针指向该变量
+
+    // 初始化随机数种子
+    srand(time(NULL));
+
+    // 初始化游戏数据
+    startplay(s);
+    startbox(s);
+    starttarget(s);
+    initmap(s);
+
+    // 游戏主循环
+    while (1) {
+        printmap(s);    // 打印地图
+        movedirection(s); // 处理移动
+        win(s);
+    }
+
+    return 0;
+}
