@@ -1,0 +1,241 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<time.h>
+#include<ctype.h>
+#include<windows.h>
+#include<conio.h>
+typedef struct{
+  int map[4][4];
+
+}game;
+int initnumber();
+void initmap(game *eosb);
+void addsum(game *eosb);
+void left(game *eosb);
+void right(game *eosb);
+void up(game *eosb);
+void down(game *eosb);
+void printfmap(game *eosb);
+void movezero(int line[4]);
+void win(game *eosb);
+int fail(game *eosb);
+void movezero(int line[4]);
+void merge(int line[4]);
+int main(void){
+  game eosb;
+  game *p;
+  p=&eosb;
+  srand(time(NULL));
+  system("cls");
+    printf("*****Welcom to 2048****\n");
+    initmap(p);
+    addsum(p);
+    printfmap(p);
+    printf("If you want to play the game(Y/N):\n");
+    char choice=toupper(getch());
+  if(choice=='Y'){
+  while(1){
+    system("cls");
+    printfmap(p);
+    printf("Input the movedirection(W/S/A/D)(其他键退出):\n");
+    char movedirection=toupper(getch());
+    switch(movedirection){
+      case 'W':
+      up(p);
+      break;
+      case 'A':
+      left(p);
+      break;
+      case 'S':
+      down(p);
+      break;
+      case 'D':
+      right(p);
+      break;
+      default:
+      printf("You have left the game!!!!! You're such a coward!!!\n");
+      exit(0);
+    }
+    if(fail(p)){
+     printf("YOu is pig!You died!!!You haven't even cleared the game yet!!!!\n");
+     exit(0);
+    }
+    win(p);
+    addsum(p);
+    
+    
+  }}
+  else{
+    return 0;
+  }
+  return 0;
+}
+
+void initmap(game *eosb){
+     for(int i=0;i<4;i++){
+      for(int j=0;j<4;j++){
+        eosb->map[i][j]=0;
+      }
+     }
+}
+void addsum(game *eosb){
+     int temp[16][2];//创建新的数组存入0的位置
+     int a=0;
+     for(int i=0;i<4;i++){
+      for(int j=0;j<4;j++){
+        if(eosb->map[i][j]==0){
+            temp[a][0]=i;
+            temp[a][1]=j;
+            a++;
+        }
+      }
+     }
+     //先决定要填充数字的数组位置随机
+     if(a==0){
+      return;
+     }
+     int addnumber=rand()%a;
+     //有除零风险
+     eosb->map[temp[addnumber][0]][temp[addnumber][1]]=initnumber();
+
+}
+void left(game *eosb){
+     for(int i=0;i<4;i++){
+         merge(eosb->map[i]);
+      }
+     }
+
+void right(game *eosb){
+      for(int i=0;i<4;i++){
+        int temp;
+        temp=eosb->map[i][0];
+        eosb->map[i][0]=eosb->map[i][3];
+        eosb->map[i][3]=temp;
+        temp=eosb->map[i][1];
+        eosb->map[i][1]=eosb->map[i][2];
+        eosb->map[i][2]=temp;
+         merge(eosb->map[i]);
+        temp=eosb->map[i][0];
+        eosb->map[i][0]=eosb->map[i][3];
+        eosb->map[i][3]=temp;
+        temp=eosb->map[i][1];
+        eosb->map[i][1]=eosb->map[i][2];
+        eosb->map[i][2]=temp;
+      }
+}
+void up(game *eosb){
+ 
+      for(int i=0;i<4;i++){
+        for(int j=i+1;j<4;j++){
+          int temp;
+          temp=eosb->map[i][j];
+          eosb->map[i][j]=eosb->map[j][i];
+          eosb->map[j][i]=temp;
+
+        }
+      }
+     left(eosb);
+       for(int i=0;i<4;i++){
+        for(int j=i+1;j<4;j++){
+          int temp;
+          temp=eosb->map[i][j];
+          eosb->map[i][j]=eosb->map[j][i];
+          eosb->map[j][i]=temp;
+
+        }
+      }  
+      
+}
+void down(game *eosb){
+ 
+         for(int i=0;i<4;i++){
+        for(int j=i+1;j<4;j++){
+          int temp;
+          temp=eosb->map[i][j];
+          eosb->map[i][j]=eosb->map[j][i];
+          eosb->map[j][i]=temp;
+
+        }
+      }
+     right(eosb);
+       for(int i=0;i<4;i++){
+        for(int j=i+1;j<4;j++){
+          int temp;
+          temp=eosb->map[i][j];
+          eosb->map[i][j]=eosb->map[j][i];
+          eosb->map[j][i]=temp;
+
+        }
+      } 
+      
+}
+void printfmap(game *eosb){
+      printf("*********** 2048***********\n");
+      printf("------------------------\n");
+     for(int i=0;i<4;i++){
+      for(int j=0;j<4;j++){
+        if(eosb->map[i][j]==0){
+          printf("|    |");
+        }
+        else{
+          printf("|%4d|",eosb->map[i][j]);
+        }
+        
+      }
+      printf("\n");
+       printf("------------------------\n");
+     }
+}
+int initnumber(){
+    
+    int number=(rand()%5)?2:4;
+    return number;
+}
+int fail(game *eosb){
+ for(int i=0;i<4;i++){
+      for(int j=0;j<4;j++){
+        if(eosb->map[i][j]==0){
+          return 0;
+        }
+        if(i<3&&eosb->map[i][j]==eosb->map[i+1][j]){
+           return 0;
+          }
+          if(j<3&&eosb->map[i][j]==eosb->map[i][j+1]){
+           return 0;
+          }
+      }
+     }
+     return 1;
+}
+void win(game *eosb){
+     for(int i=0;i<4;i++){
+      for(int j=0;j<4;j++){
+        if(eosb->map[i][j]==2048){
+          printf("You beat this game!!!There is still a little bit of intelligence!!!\n");
+          exit(0);
+        }
+      }
+     }
+}
+void movezero(int line[4]){
+  int a=0;
+  int temp[4]={0};
+  for(int j=0;j<4;j++){
+    if(line[j]!=0){
+     temp[a]=line[j];
+      a++;
+    }
+  }
+  memcpy(line,temp,4*sizeof(int));
+}
+void merge(int line[4]){
+ movezero(line);
+      for(int j=0;j<3;j++){
+        if(line[j]==line[j+1]){
+          line[j]*=2;
+          line[j+1]=0;
+        }
+      }
+      movezero(line);
+}
